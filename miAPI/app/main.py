@@ -1,4 +1,5 @@
 from fastapi import FastAPI, status, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 import asyncio
 from typing import Optional
 
@@ -9,6 +10,23 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# Configurar CORS para permitir conexiones desde React Native
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5000",
+        "http://127.0.0.1:5000",
+        "http://localhost:19000",  # Para Expo
+        "http://localhost:19001",  # Para Expo
+        "http://10.0.2.2:5000",    # Para emulador Android
+        "*"  # Solo para desarrollo, no usar en producción
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Tu código existente...
 usuarios = [
     {"id": 1, "nombre": "Juan", "edad": 21},
     {"id": 2, "nombre": "Israel", "edad": 21},
@@ -38,7 +56,6 @@ async def consultaTodos(id: Optional[int] = None):
     else:
         return {"Mensaje": "No se proporcionó ID"}
 
-# CORREGIDO: GET sin {id} en la ruta
 @app.get("/v1/usuarios/", tags=["CRUD HTTP"])
 async def leer_usuarios():
     return {
@@ -47,7 +64,6 @@ async def leer_usuarios():
         "usuarios": usuarios
     }
 
-# CORREGIDO: POST sin {id} en la ruta
 @app.post("/v1/usuarios/", tags=["CRUD HTTP"])
 async def crear_usuario(usuario: dict):
     for usr in usuarios:
@@ -64,7 +80,6 @@ async def crear_usuario(usuario: dict):
 
 @app.put("/v1/usuarios/{id}", tags=["CRUD HTTP"])
 async def actualizar_usuario(id: int, usuario: dict):
-    # Aseguramos que el ID en el body coincida con el de la URL
     usuario["id"] = id
     
     for i in range(len(usuarios)):
@@ -76,11 +91,10 @@ async def actualizar_usuario(id: int, usuario: dict):
             }
     
     raise HTTPException(
-        status_code=202,
+        status_code=404,
         detail="Usuario no encontrado"
     )
 
-# NUEVO: Endpoint DELETE
 @app.delete("/v1/usuarios/{id}", tags=["CRUD HTTP"])
 async def eliminar_usuario(id: int):
     for i in range(len(usuarios)):
@@ -92,6 +106,6 @@ async def eliminar_usuario(id: int):
             }
     
     raise HTTPException(
-        status_code=204,
+        status_code=404,
         detail="Usuario no encontrado"
     )
