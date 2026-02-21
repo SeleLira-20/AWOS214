@@ -1,111 +1,101 @@
-from fastapi import FastAPI, status, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, status ,HTTPException 
 import asyncio
 from typing import Optional
-
-# Instancia del servidor
+from pydantic import BaseModel, Field
+#Instancia del servidor
 app = FastAPI(
     title="Mi primer API",
-    description="Selene Lira",
+    description="Selene Lira ",
     version="1.0.0"
-)
+    )
 
-# Configurar CORS para permitir conexiones desde React Native
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5000",
-        "http://127.0.0.1:5000",
-        "http://localhost:19000",  # Para Expo
-        "http://localhost:19001",  # Para Expo
-        "http://10.0.2.2:5000",    # Para emulador Android
-        "*"  # Solo para desarrollo, no usar en producción
-    ],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Tu código existente...
-usuarios = [
-    {"id": 1, "nombre": "Juan", "edad": 21},
-    {"id": 2, "nombre": "Israel", "edad": 21},
-    {"id": 3, "nombre": "Sofi", "edad": 21}
+usuarios=[
+    {"id":1,"nombre":"Juan","edad":21},
+    {"id":2,"nombre":"Israel","edad":21},
+    {"id":3,"nombre":"Sofi","edad":21}
 ]
 
-@app.get("/", tags=["Inicio"])
+#Modelo de validación
+class usuario_create(BaseModel):
+    id: int = Field(...,gt=0, description="Identificador de usuario")
+    nombre: str = Field(...,min_length=3,max_length=50, example="Juanita")
+    edad: int = Field(...,ge=1,le=123, description="Edad valida entre 1 y 123")
+
+
+
+@app.get("/",tags=["Inicio"])  # Endpoint de inicio, todos los endpoints se acompañan de una función
 async def bienvenida():
-    return {"mensaje": "¡Bienvenido a mi API!"}
+    return {"mensaje": "¡Bienvenido a mi API!"}  # Formato JSON
 
-@app.get("/HolaMundo", tags=["Bienvenida asincrona"])
+@app.get("/HolaMundo",tags=["Bienvenida asincrona"])  # Endpoint
 async def hola():
-    await asyncio.sleep(7)
-    return {"mensaje": "¡Hola Mundo FastAPI!", "estatus": "200"}
+    await asyncio.sleep(7)#Simulacion de uns 
+    return {"mensaje": "¡Hola Mundo FastAPI!",
+            "estatus":"200"
+            }  # Formato JSON
 
-@app.get("/v1/parametroOb/{id}", tags=["Parametro Obligatorio"])
-async def consultaUno(id: int):
-    return {"Se encontró el usuario": id}
+@app.get("/v1/parametroOb/{id}",tags=["Parametro Obligatorio"])  # Endpoint de inicio, todos los endpoints se acompañan de una función
+async def consultaUno(id:int):
+    return {"Se encontró el usuario": id}  # Formato JSON
 
-@app.get("/v1/parametroOp/", tags=["Parametro Opcional"])
-async def consultaTodos(id: Optional[int] = None):
+@app.get("/v1/parametroOp/",tags=["Parametro Opcional"])  # Endpoint de inicio, todos los endpoints se acompañan de una función
+async def consultaTodos(id:Optional[int]=None):
     if id is not None:
         for usuario in usuarios:
             if usuario["id"] == id:
-                return {"Mensaje": "Usuario encontrado", "Usuario": usuario}
-        return {"Mensaje": "Usuario no encontrado", "Usuario": id}
+                return{"Mensaje": "Usuario encontrado", "Usuario": usuario}
+        return{"Mensaje": "Usuario no encontrado", "Usuario": id}
     else:
-        return {"Mensaje": "No se proporcionó ID"}
-
-@app.get("/v1/usuarios/", tags=["CRUD HTTP"])
+        return{"Mensaje": "No se proporcionó ID"}
+    
+@app.get("/v1/usuarios/{id}",tags=["CRUD HTTP"])  # Endpoint de inicio, todos los endpoints se acompañan de una función
 async def leer_usuarios():
     return {
-        "status": "200",
+        "status":"200",
         "total": len(usuarios),
-        "usuarios": usuarios
-    }
+        "usuarios":usuarios
+        }  # Formato JSON
 
-@app.post("/v1/usuarios/", tags=["CRUD HTTP"])
-async def crear_usuario(usuario: dict):
+@app.post("/v1/usuarios/",tags=["CRUD HTTP"])  # Endpoint de inicio, todos los endpoints se acompañan de una función
+async def crear_usuario(usuario:usuario_create):
     for usr in usuarios:
-        if usr["id"] == usuario.get("id"):
+        if usr["id"] == usuario.id:
             raise HTTPException(
                 status_code=400,
                 detail="El id ya existe"
             )
     usuarios.append(usuario)
-    return {
-        "mensaje": "Usuario agregado",
-        "Usuario": usuario
+    return{
+        "mensaje":"Usuario agregado",
+        "Usuario":usuario
     }
 
-@app.put("/v1/usuarios/{id}", tags=["CRUD HTTP"])
-async def actualizar_usuario(id: int, usuario: dict):
-    usuario["id"] = id
-    
-    for i in range(len(usuarios)):
-        if usuarios[i]["id"] == id:
-            usuarios[i] = usuario
-            return {
-                "mensaje": "Usuario actualizado",
-                "Usuario": usuario
+@app.put("/v1/usuarios/{id}", tags=["CRUD HTTP"])  # Endpoint de inicio, todos los endpoints se acompañan de una función
+async def actualizar_usuario(usuario: dict):
+    for usr in usuarios:
+        if usr["id"] == usuario.get("id"):
+            usuarios.append(usuario)
+            return{
+                "status":"200",
+                "mensaje":"Usuario actualizado",
+                "Usuario":usuario
             }
-    
     raise HTTPException(
-        status_code=404,
-        detail="Usuario no encontrado"
+        status_code=400,
+        detail="El id no existe, no se puede actualizar"
     )
 
-@app.delete("/v1/usuarios/{id}", tags=["CRUD HTTP"])
-async def eliminar_usuario(id: int):
-    for i in range(len(usuarios)):
-        if usuarios[i]["id"] == id:
-            usuario_eliminado = usuarios.pop(i)
-            return {
-                "mensaje": "Usuario eliminado",
-                "Usuario": usuario_eliminado
+@app.delete("/v1/usuarios/{id}", tags=["CRUD HTTP"])  # Endpoint de inicio, todos los endpoints se acompañan de una función
+async def eliminar_usuario(usuario: dict):
+    for usr in usuarios:
+        if usr["id"] == usuario.get("id"):
+            usuarios.remove(usuario)
+            return{
+                "status":"200",
+                "mensaje":"Usuario eliminado",
+                "Usuario":usuario
             }
-    
     raise HTTPException(
-        status_code=404,
-        detail="Usuario no encontrado"
+        status_code=400,
+        detail="El id no existe, no se puede eliminar"
     )
