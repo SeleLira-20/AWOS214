@@ -3,7 +3,7 @@ services:
     build: .
     container_name: server_repaso
     ports:
-      - "6000:6000"
+      - "5000:5000"
     volumes:
       - ./app:/app/app
       #uno o mas contenedores d

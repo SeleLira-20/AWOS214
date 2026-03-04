@@ -267,7 +267,7 @@ async def eliminar_prestamo(id: int):
         "prestamo_id": id
     }
 
-# Endpoint adicional para ver todos los préstamos
+#  para ver todos los préstamos
 @app.get("/prestamos", tags=["Préstamos"])
 async def listar_prestamos(activos: Optional[bool] = None):
     if activos is True:
