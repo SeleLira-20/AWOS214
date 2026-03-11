@@ -9,7 +9,7 @@ import uuid
 
 app = FastAPI(
     title="API de Tickets - Selene",
-    description="API para control de tickets con autenticación",
+    description="API Sistema de Tikets de soporte tecnico",
     version="1.0"
 )
 
@@ -38,11 +38,12 @@ class TicketCreate(BaseModel):
 
 class Ticket(TicketCreate):
     id: int
-    estado: str = "abierto"
+    estado: str = "Pendiente"
     fecha_creacion: datetime
 
 
-# AUTENTICACIÓN BASICA
+
+# AUTENTICACIÓN 
 def verificar_usuario(credentials: HTTPBasicCredentials = Depends(security)):
 
     usuario_correcto = secrets.compare_digest(credentials.username, USUARIO)
