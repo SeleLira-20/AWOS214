@@ -1,5 +1,5 @@
 #endpoints de usaurios
-from fastapi import status, HTTException, Depends, APIRouter
+from fastapi import status, HTTPException, Depends, APIRouter
 from app.models.usuario import usuario_create
 from app.data.database import usuarios 
 from app.security.auth import verificar_Peticion

@@ -1,5 +1,5 @@
 #modelo de validacion pydantic
-from pydantic import BaseModel, fiel
+from pydantic import BaseModel, Field
 
 class usuario_create(BaseModel):
     id: int = Field(...,gt=0, description="Identificador de usuario")
